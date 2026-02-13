@@ -1,19 +1,9 @@
 const express = require("express");
 const db = require("./db");
-const { pipeline } = require("@xenova/transformers");
+
 
 const router = express.Router();
 
-let generator = null;
-
-async function getModel() {
-  if (!generator) {
-    console.log("Loading local model...");
-    generator = await pipeline("text-generation", "Xenova/distilgpt2");
-    console.log("Model loaded.");
-  }
-  return generator;
-}
 
 /*
 EXTRACT ACTION ITEMS
@@ -142,7 +132,7 @@ router.get("/status", (req, res) => {
   res.json({
     backend: "ok",
     database: "connected",
-    llm: "local-model-loaded",
+    llm: "rule-based-extraction",
   });
 });
 
