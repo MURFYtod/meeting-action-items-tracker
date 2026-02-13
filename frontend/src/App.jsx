@@ -22,29 +22,38 @@ function App() {
   };
 
   const extract = async () => {
+    if (!transcript.trim()) {
+      alert("Paste transcript first");
+      return;
+    }
+
     await axios.post(`${API}/extract`, { transcript });
-    loadActions();
-    loadHistory();
+
+    await loadActions();
+    await loadHistory();
   };
 
   const markDone = async (id) => {
     await axios.patch(`${API}/actions/${id}/done`);
-    loadActions();
+    await loadActions();
   };
 
   const deleteAction = async (id) => {
     await axios.delete(`${API}/actions/${id}`);
-    loadActions();
+    await loadActions();
   };
 
   const addAction = async () => {
+    if (!newTask) return;
+
     await axios.post(`${API}/actions`, {
       task: newTask,
-      owner: newOwner,
+      owner: newOwner || "unknown",
     });
+
     setNewTask("");
     setNewOwner("");
-    loadActions();
+    await loadActions();
   };
 
   const editAction = async (a) => {
@@ -59,7 +68,7 @@ function App() {
       due_date: "unknown",
     });
 
-    loadActions();
+    await loadActions();
   };
 
   useEffect(() => {
