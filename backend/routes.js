@@ -1,14 +1,12 @@
 const express = require("express");
 const db = require("./db");
 
-
 const router = express.Router();
-
 
 /*
 EXTRACT ACTION ITEMS
 */
-router.post("/extract", async (req, res) => {
+router.post("/extract", (req, res) => {
   const { transcript } = req.body;
 
   if (!transcript) {
@@ -20,49 +18,48 @@ router.post("/extract", async (req, res) => {
       .split(/[.\n]/)
       .map((l) => l.trim())
       .filter((l) => l.toLowerCase().includes("will"));
-    db.run("DELETE FROM actions");
-    db.run(
-      "INSERT INTO transcripts(text) VALUES(?)",
-      [transcript],
-      function () {
-        const transcriptId = this.lastID;
 
-        lines.forEach((line) => {
-          db.run(
-            "INSERT INTO actions(task, owner, due_date, transcript_id) VALUES(?,?,?,?)",
-            [
-              line,
-              line.split(" ")[0],
-              "unknown",
-              transcriptId,
-            ]
-          );
-        });
+    db.prepare("DELETE FROM actions").run();
 
-        setTimeout(() => {
-          db.all(
-            "SELECT * FROM actions WHERE transcript_id = ?",
-            [transcriptId],
-            (err, rows) => {
-              res.json({ result: rows });
-            }
-          );
-        }, 200);
-      }
-    );
+    const result = db
+      .prepare("INSERT INTO transcripts(text) VALUES(?)")
+      .run(transcript);
+
+    const transcriptId = result.lastInsertRowid;
+
+    lines.forEach((line) => {
+      db.prepare(
+        "INSERT INTO actions(task, owner, due_date, transcript_id) VALUES(?,?,?,?)"
+      ).run(
+        line,
+        line.split(" ")[0],
+        "unknown",
+        transcriptId
+      );
+    });
+
+    const rows = db
+      .prepare("SELECT * FROM actions WHERE transcript_id = ?")
+      .all(transcriptId);
+
+    res.json({ result: rows });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Extraction failed" });
   }
 });
+
+/*
+GET ACTIONS
+*/
 router.get("/actions", (req, res) => {
-  db.all("SELECT * FROM actions ORDER BY id DESC", (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-    res.json(rows);
-  });
+  const rows = db
+    .prepare("SELECT * FROM actions ORDER BY id DESC")
+    .all();
+
+  res.json(rows);
 });
+
 /*
 ADD ACTION
 */
@@ -73,11 +70,11 @@ router.post("/actions", (req, res) => {
     return res.status(400).json({ error: "Task required" });
   }
 
-  db.run(
-    "INSERT INTO actions(task, owner, due_date) VALUES(?,?,?)",
-    [task, owner || "unknown", due_date || "unknown"],
-    () => res.json({ success: true })
-  );
+  db.prepare(
+    "INSERT INTO actions(task, owner, due_date) VALUES(?,?,?)"
+  ).run(task, owner || "unknown", due_date || "unknown");
+
+  res.json({ success: true });
 });
 
 /*
@@ -86,43 +83,46 @@ EDIT ACTION
 router.put("/actions/:id", (req, res) => {
   const { task, owner, due_date } = req.body;
 
-  db.run(
-    "UPDATE actions SET task=?, owner=?, due_date=? WHERE id=?",
-    [task, owner, due_date, req.params.id],
-    () => res.json({ success: true })
-  );
+  db.prepare(
+    "UPDATE actions SET task=?, owner=?, due_date=? WHERE id=?"
+  ).run(task, owner, due_date, req.params.id);
+
+  res.json({ success: true });
 });
 
 /*
 DELETE ACTION
 */
 router.delete("/actions/:id", (req, res) => {
-  db.run(
-    "DELETE FROM actions WHERE id=?",
-    [req.params.id],
-    () => res.json({ success: true })
-  );
+  db.prepare(
+    "DELETE FROM actions WHERE id=?"
+  ).run(req.params.id);
+
+  res.json({ success: true });
 });
 
 /*
 MARK DONE
 */
 router.patch("/actions/:id/done", (req, res) => {
-  db.run(
-    "UPDATE actions SET done=1 WHERE id=?",
-    [req.params.id],
-    () => res.json({ success: true })
-  );
+  db.prepare(
+    "UPDATE actions SET done=1 WHERE id=?"
+  ).run(req.params.id);
+
+  res.json({ success: true });
 });
 
 /*
-TRANSCRIPT HISTORY (LAST 5)
+TRANSCRIPT HISTORY
 */
 router.get("/transcripts", (req, res) => {
-  db.all(
-    "SELECT * FROM transcripts ORDER BY created_at DESC LIMIT 5",
-    (err, rows) => res.json(rows)
-  );
+  const rows = db
+    .prepare(
+      "SELECT * FROM transcripts ORDER BY created_at DESC LIMIT 5"
+    )
+    .all();
+
+  res.json(rows);
 });
 
 /*

@@ -1,7 +1,8 @@
 const Database = require("better-sqlite3");
 
-const db = new Database("data.db");
+const db = new Database("database.db");
 
+// tables
 db.exec(`
 CREATE TABLE IF NOT EXISTS transcripts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
