@@ -1,22 +1,34 @@
 
-AI tools were used as a development assistant to speed up implementation.
+---
 
-AI helped with:
-- Initial Express route scaffolding
-- React component structure
-- SQLite schema setup
-- Debugging integration issues
+# AI_NOTES.md
 
-What I implemented and verified myself:
-- Action item extraction logic from transcript text
-- CRUD operations for action items
-- Transcript history feature
-- Status endpoint
-- Frontend–backend API integration
-- Testing the full workflow manually
+Create in project root.
 
-LLM used:
-Local transformers model (Xenova/distilgpt2) via @xenova/transformers.
+
+AI tools were used to accelerate development while ensuring full understanding of the code.
+
+## AI was used for:
+- Scaffolding Express routes
+- Building React UI structure
+- Designing SQLite schema
+- Debugging frontend/backend integration
+- Deployment troubleshooting
+
+## Manually verified:
+- All API routes
+- Database operations
+- CRUD flows
+- Extraction logic
+- Deployment configuration
+- Frontend API integration
+
+## LLM used in the app
+No external LLM API is used in the deployed version.
+
+Action item extraction is implemented using:
+- rule-based parsing (sentence splitting + keyword detection)
 
 Reason:
-Using a local model ensures the app runs without external API dependencies and remains deployable without API keys.
+This avoids API keys, reduces deployment complexity, and ensures the app runs reliably on free hosting.
+
