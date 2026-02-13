@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+const API = "https://meeting-action-items-tracker-ahhe.onrender.com";
+
 function App() {
   const [transcript, setTranscript] = useState("");
   const [actions, setActions] = useState([]);
@@ -10,33 +12,33 @@ function App() {
   const [newOwner, setNewOwner] = useState("");
 
   const loadActions = async () => {
-    const res = await axios.get("http://localhost:5000/actions");
+    const res = await axios.get(`${API}/actions`);
     setActions(res.data);
   };
 
   const loadHistory = async () => {
-    const res = await axios.get("http://localhost:5000/transcripts");
+    const res = await axios.get(`${API}/transcripts`);
     setHistory(res.data);
   };
 
   const extract = async () => {
-    await axios.post("http://localhost:5000/extract", { transcript });
+    await axios.post(`${API}/extract`, { transcript });
     loadActions();
     loadHistory();
   };
 
   const markDone = async (id) => {
-    await axios.patch(`http://localhost:5000/actions/${id}/done`);
+    await axios.patch(`${API}/actions/${id}/done`);
     loadActions();
   };
 
   const deleteAction = async (id) => {
-    await axios.delete(`http://localhost:5000/actions/${id}`);
+    await axios.delete(`${API}/actions/${id}`);
     loadActions();
   };
 
   const addAction = async () => {
-    await axios.post("http://localhost:5000/actions", {
+    await axios.post(`${API}/actions`, {
       task: newTask,
       owner: newOwner,
     });
@@ -51,7 +53,7 @@ function App() {
 
     if (!task || !owner) return;
 
-    await axios.put(`http://localhost:5000/actions/${a.id}`, {
+    await axios.put(`${API}/actions/${a.id}`, {
       task,
       owner,
       due_date: "unknown",
@@ -68,19 +70,21 @@ function App() {
   return (
     <div style={{ padding: 20, fontFamily: "Arial" }}>
       <h2>Meeting Action Items Tracker</h2>
+
       <div style={{ marginBottom: 15 }}>
         <button
           style={{ marginRight: 10 }}
           onClick={async () => {
-            const res = await axios.get("http://localhost:5000/status");
+            const res = await axios.get(`${API}/status`);
             alert(JSON.stringify(res.data, null, 2));
           }}
         >
           Check Status
-      </button>
+        </button>
 
-      <button onClick={extract}>Extract Action Items</button>
-    </div>
+        <button onClick={extract}>Extract Action Items</button>
+      </div>
+
       <textarea
         rows="6"
         cols="60"
@@ -90,7 +94,6 @@ function App() {
       />
 
       <br /><br />
-      <button onClick={extract}>Extract Action Items</button>
 
       <h3>Add Action</h3>
       <input
